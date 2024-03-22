@@ -1,58 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Text Encryption and Decryption</title>
-<script>
-    function encrypt() {
-        var inputText = document.getElementById("inputText").value;
-        var encryptedText = "";
-        for (var i = 0; i < inputText.length; i++) {
-            var charCode = inputText.charCodeAt(i);
-            encryptedText += String.fromCharCode(charCode + 1); // Incrementing ASCII value by 1
-        }
-        document.getElementById("encryptedText").value = encryptedText;
-        document.getElementById("decryptButton").disabled = false; // Enable decryption button
-    }
+    <meta charset="UTF-8">
+    <title>Caesar Cipher Tool</title>
+    <style>
 
-    function decrypt() {
-        var encryptedText = document.getElementById("encryptedText").value;
-        var decryptedText = "";
-        for (var i = 0; i < encryptedText.length; i++) {
-            var charCode = encryptedText.charCodeAt(i);
-            decryptedText += String.fromCharCode(charCode - 1); // Decrementing ASCII value by 1
-        }
-        document.getElementById("decryptedText").value = decryptedText;
-    }
+/* styles.css */
+body, html {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
 
-    function enableDecryptButton() {
-        var encryptedText = document.getElementById("encryptedText").value;
-        if (encryptedText !== "") {
-            document.getElementById("decryptButton").disabled = false;
-        } else {
-            document.getElementById("decryptButton").disabled = true;
-        }
-    }
+.app-container {
+    background-color: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    text-align: center;
+    width: 90%;
+    max-width: 500px;
+}
 
-    function copyDecryptedText() {
-        var decryptedText = document.getElementById("decryptedText");
-        decryptedText.select();
-        document.execCommand("copy");
-        alert("Decrypted text copied to clipboard!");
-    }
-</script>
+input[type="text"], input[type="number"], input[type="text"]:focus, input[type="number"]:focus {
+    width: calc(100% - 22px);
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    transition: border 0.3s;
+}
+
+input[type="text"]:focus, input[type="number"]:focus {
+    border-color: #007bff;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    margin: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#result {
+    font-weight: bold;
+}
+
+label {
+    display: block;
+    text-align: left;
+    margin: 0 0 5px 3px;
+}
+
+    </style>
 </head>
 <body>
-    <h1>Text Encryption and Decryption</h1>
-    <label for="inputText">Enter Text:</label><br>
-    <textarea id="inputText" rows="4" cols="50"></textarea><br><br>
-    <button onclick="encrypt()">Encrypt</button><br><br>
-    <label for="encryptedText">Encrypted Text:</label><br>
-    <textarea id="encryptedText" rows="4" cols="50" oninput="enableDecryptButton()"></textarea><br><br>
-    <button id="decryptButton" onclick="decrypt()" disabled>Decrypt</button><br><br>
-    <label for="decryptedText">Decrypted Text:</label><br>
-    <textarea id="decryptedText" rows="4" cols="50" readonly></textarea><br><br>
-    <button onclick="copyDecryptedText()">Copy Decrypted Text</button><br><br>
+    <div class="app-container">
+        <h2>Caesar Cipher Tool</h2>
+        <label for="inputText">Text:</label>
+        <input type="text" id="inputText">
+        <label for="shift">Shift:</label>
+        <input type="number" id="shift" min="0" max="25" value="1">
+        <label for="customAlphabet">Custom Alphabet (leave blank for default a-z):</label>
+        <input type="text" id="customAlphabet" value="abcdefghijklmnopqrstuvwxyz" >
+        <button onclick="encrypt()">Encrypt</button>
+        <button onclick="decrypt()">Decrypt</button>
+        <p>Result: <span id="result"></span></p>
+        <button id="copyButton">Copy Result</button>
+    </div>
+
+    <script>
+        function caesarCipher(str, shift, alphabet = 'abcdefghijklmnopqrstuvwxyz') {
+            if (shift < 0) return caesarCipher(str, shift + alphabet.length, alphabet);
+
+            let output = '';
+            for (let i = 0; i < str.length; i++) {
+                let char = str[i];
+                let isLetter = alphabet.includes(char.toLowerCase());
+                if (isLetter) {
+                    let isUpper = char === char.toUpperCase();
+                    let index = alphabet.indexOf(char.toLowerCase());
+                    let shiftedIndex = (index + shift) % alphabet.length;
+                    char = alphabet[shiftedIndex];
+                    if (isUpper) char = char.toUpperCase();
+                }
+                output += char;
+            }
+            return output;
+        }
+
+        function encrypt() {
+            const text = document.getElementById('inputText').value;
+            const shift = parseInt(document.getElementById('shift').value);
+            const customAlphabet = document.getElementById('customAlphabet').value.replace(/\s+/g, '');
+            const result = caesarCipher(text, shift, customAlphabet || undefined);
+            document.getElementById('result').textContent = result;
+        }
+
+        function decrypt() {
+            const text = document.getElementById('inputText').value;
+            const shift = parseInt(document.getElementById('shift').value);
+            const customAlphabet = document.getElementById('customAlphabet').value.replace(/\s+/g, '');
+            const result = caesarCipher(text, -shift, customAlphabet || undefined);
+            document.getElementById('result').textContent = result;
+        }
+
+        document.getElementById('copyButton').addEventListener('click', function() {
+            // Create a temporary textarea element to hold the result text
+            const textarea = document.createElement('textarea');
+            // Get the text from the result span
+            const textToCopy = document.getElementById('result').textContent;
+            // Use the textarea to enable copying
+            textarea.value = textToCopy;
+            // Avoid showing this textarea on the page
+            textarea.setAttribute('readonly', '');
+            textarea.style.position = 'absolute';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            // Select and copy the text
+            textarea.select();
+            document.execCommand('copy');
+            // Clean up: remove the temporary textarea
+            document.body.removeChild(textarea);
+            // Optionally, provide feedback that text was copied
+            alert('Text copied to clipboard!');
+        });
+    </script>
 </body>
 </html>
