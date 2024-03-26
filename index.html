@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Caesar Cipher Tool</title>
+    <title>Enhanced Caesar Cipher Tool</title>
     <style>
         /* styles.css */
         body, html {
@@ -61,13 +61,13 @@
 </head>
 <body>
     <div class="app-container">
-        <h2>Caesar Cipher Tool</h2>
+        <h2>Enhanced Caesar Cipher Tool</h2>
         <label for="inputText">Text:</label>
         <input type="text" id="inputText">
         <label for="shift">Shift:</label>
         <input type="number" id="shift" min="0" max="25" value="1">
-        <label for="customAlphabet">Custom Alphabet (leave blank for default a-z):</label>
-        <input type="text" id="customAlphabet" value="abcdefghijklmnopqrstuvwxyz">
+        <label for="secret">Secret Word:</label>
+        <input type="text" id="secret">
         <button onclick="encrypt()">Encrypt</button>
         <button onclick="decrypt()">Decrypt</button>
         <p>Result: <span id="result"></span></p>
@@ -75,59 +75,77 @@
     </div>
 
     <script>
-        function caesarCipher(str, shift, alphabet = 'abcdefghijklmnopqrstuvwxyz') {
-            if (shift < 0) return caesarCipher(str, shift + alphabet.length, alphabet);
-
+        function enhancedCaesarCipher(str, shift, secret, decrypt = false) {
+            const standardAlphabet = 'abcdefghijklmnopqrstuvwxyz';
+            let modifiedAlphabet = generateModifiedAlphabet(secret, standardAlphabet);
             let output = '';
+
             for (let i = 0; i < str.length; i++) {
-                let char = str[i];
-                let isLetter = alphabet.includes(char.toLowerCase());
-                if (isLetter) {
-                    let isUpper = char === char.toUpperCase();
-                    let index = alphabet.indexOf(char.toLowerCase());
-                    let shiftedIndex = (index + shift) % alphabet.length;
-                    char = alphabet[shiftedIndex];
-                    if (isUpper) char = char.toUpperCase();
+                let dynamicShift = calculateDynamicShift(i, shift, secret, modifiedAlphabet.length);
+                if (decrypt) {
+                    dynamicShift = modifiedAlphabet.length - dynamicShift;
                 }
-                output += char;
+
+                let char = str[i];
+                let isUpper = char === char.toUpperCase();
+                let index = modifiedAlphabet.indexOf(char.toLowerCase());
+
+                if (index === -1) {
+                    output += char;
+                    continue;
+                }
+
+                let shiftedIndex = (index + dynamicShift) % modifiedAlphabet.length;
+                if (shiftedIndex < 0) shiftedIndex += modifiedAlphabet.length; // For negative shift values
+
+                let shiftedChar = modifiedAlphabet[shiftedIndex];
+                if (isUpper) shiftedChar = shiftedChar.toUpperCase();
+
+                output += shiftedChar;
             }
+
             return output;
+        }
+
+        function generateModifiedAlphabet(secret, standardAlphabet) {
+            let uniqueSecret = [...new Set(secret.toLowerCase())];
+            let filteredAlphabet = [...standardAlphabet].filter(char => !uniqueSecret.includes(char));
+            let modifiedAlphabet = uniqueSecret.concat(filteredAlphabet).join('');
+            return modifiedAlphabet;
+        }
+
+        function calculateDynamicShift(position, baseShift, secret, alphabetLength) {
+            let secretSum = Array.from(secret).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            return (baseShift + position + secretSum) % alphabetLength;
         }
 
         function encrypt() {
             const text = document.getElementById('inputText').value;
             const shift = parseInt(document.getElementById('shift').value);
-            const customAlphabet = document.getElementById('customAlphabet').value.replace(/\s+/g, '');
-            const result = caesarCipher(text, shift, customAlphabet || undefined);
+            const secret = document.getElementById('secret').value;
+            const result = enhancedCaesarCipher(text, shift, secret);
             document.getElementById('result').textContent = result;
         }
 
         function decrypt() {
             const text = document.getElementById('inputText').value;
             const shift = parseInt(document.getElementById('shift').value);
-            const customAlphabet = document.getElementById('customAlphabet').value.replace(/\s+/g, '');
-            const result = caesarCipher(text, -shift, customAlphabet || undefined);
+            const secret = document.getElementById('secret').value;
+            const result = enhancedCaesarCipher(text, shift, secret, true);
             document.getElementById('result').textContent = result;
         }
 
         document.getElementById('copyButton').addEventListener('click', function() {
-            // Create a temporary textarea element to hold the result text
             const textarea = document.createElement('textarea');
-            // Get the text from the result span
             const textToCopy = document.getElementById('result').textContent;
-            // Use the textarea to enable copying
             textarea.value = textToCopy;
-            // Avoid showing this textarea on the page
             textarea.setAttribute('readonly', '');
             textarea.style.position = 'absolute';
             textarea.style.left = '-9999px';
             document.body.appendChild(textarea);
-            // Select and copy the text
             textarea.select();
             document.execCommand('copy');
-            // Clean up: remove the temporary textarea
             document.body.removeChild(textarea);
-            // Optionally, provide feedback that text was copied
             alert('Text copied to clipboard!');
         });
     </script>
